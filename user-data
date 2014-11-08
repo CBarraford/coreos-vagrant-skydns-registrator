@@ -1,0 +1,74 @@
+#cloud-config
+
+coreos:
+  etcd:
+    # generate a new token for each unique cluster from https://discovery.etcd.io/new
+    # WARNING: replace each time you 'vagrant destroy'
+    discovery: https://discovery.etcd.io/0cd21118aa746eb188985e908df7d14e
+    addr: $public_ipv4:4001
+    peer-addr: $public_ipv4:7001
+  fleet:
+    public-ip: $public_ipv4
+  units:
+    - name: etcd.service
+      command: start
+    - name: fleet.service
+      command: start
+    - name: docker.service
+      command: restart
+      content: |
+        .include /usr/lib/systemd/system/docker.service
+        [Service]
+        ExecStart=
+        ExecStart=/usr/bin/docker -d -s=btrfs -r=false -H fd:// --dns=10.1.42.1
+    - name: skydns.service
+      enable: false
+      content: |
+        [Unit]
+        Description=Skydns
+        After=docker.service
+        After=docker.service
+        After=fleet.service
+
+        [Service]
+        Environment="ETCD_MACHINES=10.1.42.1:4001"
+        Environment="SKYDNS_DOMAIN=lucid.local"
+        Environment="SKYDNS_NAMESERVERS=8.8.8.8:53,8.8.4.4:53"
+        ExecStop=/usr/bin/docker stop skydns
+        ExecStart=/usr/bin/docker run -p 10.1.42.1:53:53/udp --name skydns -e SKYDNS_DOMAIN=lucid.local -e SKYDNS_NAMESERVERS=8.8.8.8:53,8.8.4.4:53 -e ETCD_MACHINES=10.1.42.1:4001 skynetservices/skydns -addr 0.0.0.0:53
+        Restart=always
+
+        [X-Fleet]
+        Global=true
+    - name: registrator.service
+      enable: false
+      content: |
+        [Unit]
+        Description=Registrator
+        After=docker.service
+        Requires=docker.service
+        After=etcd.service
+        After=fleet.service
+
+        [Service]
+        ExecStop=/usr/bin/docker stop registrator
+        EnvironmentFile=/etc/environment
+        ExecStart=/usr/bin/docker run -v /var/run/docker.sock:/tmp/docker.sock --name registrator -h $COREOS_PRIVATE_IPV4 progrium/registrator skydns2://10.1.42.1:4001/lucid.local
+        Restart=always
+
+        [X-Fleet]
+        Global=true
+    - name: primordial.service
+      command: start
+      content: |
+        [Unit]
+        Description=Load and start fleet services
+        After=fleet.service
+        Requires=fleet.service
+        After=etcd.service
+        Requires=etcd.service
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        ExecStart=/usr/bin/fleetctl start /etc/systemd/system/skydns.service
+        ExecStart=/usr/bin/fleetctl start /etc/systemd/system/registrator.service
