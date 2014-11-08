@@ -1,7 +1,7 @@
-# CoreOS Vagrant
+# CoreOS Vagrant + Skydns + Registrator
 
 This repo provides a template Vagrantfile to create a CoreOS virtual machine using the VirtualBox software hypervisor.
-After setup is complete you will have a single CoreOS virtual machine running on your local machine.
+After setup is complete you will have a three node cluster with skydns and registrator already setup and working.
 
 ## Streamlined setup
 
@@ -66,22 +66,18 @@ After a 'vagrant reload' you will be prompted for your local machine password.
 
 #### Provisioning with user-data
 
-The Vagrantfile will provision your CoreOS VM(s) with [coreos-cloudinit][coreos-cloudinit] if a `user-data` file is found in the project directory.
-coreos-cloudinit simplifies the provisioning process through the use of a script or cloud-config document.
-
-To get started, copy `user-data.sample` to `user-data` and make any necessary modifications.
-Check out the [coreos-cloudinit documentation][coreos-cloudinit] to learn about the available features.
+The Vagrantfile will provision your CoreOS VM(s) with [coreos-cloudinit][coreos-cloudinit] using the `user-data`.
+Coreos-cloudinit simplifies the provisioning process through the use of a script or cloud-config document.
 
 [coreos-cloudinit]: https://github.com/coreos/coreos-cloudinit
 
 #### Configuration
 
 The Vagrantfile will parse a `config.rb` file containing a set of options used to configure your CoreOS cluster.
-See `config.rb.sample` for more information.
 
 ## Cluster Setup
 
-Launching a CoreOS cluster on Vagrant is as simple as configuring `$num_instances` in a `config.rb` file to 3 (or more!) and running `vagrant up`.
+Launching a CoreOS cluster on Vagrant is as simple as configuring `$num\_instances` in a `config.rb` file to 3 (or more!) and running `vagrant up`.
 Make sure you provide a fresh discovery URL in your `user-data` if you wish to bootstrap etcd in your cluster.
 
 ## New Box Versions
@@ -97,7 +93,7 @@ vagrant box remove coreos --provider virtualbox
 
 ## Docker Forwarding
 
-By setting the `$expose_docker_tcp` configuration value you can forward a local TCP port to docker on
+By setting the `$expose\_docker\_tcp` configuration value you can forward a local TCP port to docker on
 each CoreOS machine that you launch. The first machine will be available on the port that you specify
 and each additional machine will increment the port by 1.
 
@@ -105,6 +101,6 @@ Follow the [Enable Remote API instructions][coreos-enabling-port-forwarding] to 
 
 [coreos-enabling-port-forwarding]: https://coreos.com/docs/launching-containers/building/customizing-docker/#enable-the-remote-api-on-a-new-socket
 
-Then you can then use the `docker` command from your local shell by setting `DOCKER_HOST`:
+Then you can then use the `docker` command from your local shell by setting `DOCKER\_HOST`:
 
     export DOCKER_HOST=tcp://localhost:2375
