@@ -32,10 +32,10 @@ coreos:
 
         [Service]
         Environment="ETCD_MACHINES=10.1.42.1:4001"
-        Environment="SKYDNS_DOMAIN=lucid.local"
+        Environment="SKYDNS_DOMAIN=skydns.local"
         Environment="SKYDNS_NAMESERVERS=8.8.8.8:53,8.8.4.4:53"
         ExecStop=/usr/bin/docker stop skydns
-        ExecStart=/usr/bin/docker run -p 10.1.42.1:53:53/udp --name skydns -e SKYDNS_DOMAIN=lucid.local -e SKYDNS_NAMESERVERS=8.8.8.8:53,8.8.4.4:53 -e ETCD_MACHINES=10.1.42.1:4001 skynetservices/skydns -addr 0.0.0.0:53
+        ExecStart=/usr/bin/docker run -p 10.1.42.1:53:53/udp --name skydns -e SKYDNS_DOMAIN=skydns.local -e SKYDNS_NAMESERVERS=8.8.8.8:53,8.8.4.4:53 -e ETCD_MACHINES=10.1.42.1:4001 skynetservices/skydns -addr 0.0.0.0:53
         Restart=always
 
         [X-Fleet]
@@ -53,7 +53,7 @@ coreos:
         [Service]
         ExecStop=/usr/bin/docker stop registrator
         EnvironmentFile=/etc/environment
-        ExecStart=/usr/bin/docker run -v /var/run/docker.sock:/tmp/docker.sock --name registrator -h $COREOS_PRIVATE_IPV4 progrium/registrator skydns2://10.1.42.1:4001/lucid.local
+        ExecStart=/usr/bin/docker run -v /var/run/docker.sock:/tmp/docker.sock --name registrator -h $COREOS_PRIVATE_IPV4 progrium/registrator skydns2://10.1.42.1:4001/skydns.local
         Restart=always
 
         [X-Fleet]
