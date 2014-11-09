@@ -16,3 +16,17 @@ Skydns serves dns requests, while registrator automatically adds and removes dns
 ## More README
 
 See the original source code [README](https://github.com/coreos/coreos-vagrant/blob/master/README.md) for more info about how to setup vagrant, virtualbox, etc, etc. Almost everything in there applies here as well.
+
+### Example Usage
+
+Once the cluster is up, launching containers should automagically create DNS records for the services in that container so its dynamically available to all nodes within the cluster. Of course, thats assuming that skydns and registrator are running properly. We can easily check if all skydns and registrator are up on all hosts by running `fleetctl list-units` on any node in the clude. 
+
+Now that we've confirmed everything is running ok, here is an example of using dynamic DNS across nodes.
+
+1. Generate a new etcd key and update the `user-data` file (`curl https://discovery.etcd.io/new`). You need to do this step everytime you do `vagrant destroy`
+2. Run `vagrant up`
+3. Launch a redis server on `core-01` (`docker run -d -p 6379:6379 --name redis -e "SERVICE_NAME=redis/db1" redis`)
+4. Launch another redis server on `core-02` (`docker run -d -p 6379:6379 --name redis -e "SERVICE_NAME=redis/db2" redis`)
+5. On `core-03`, connect to redis via `redis-cli` (`docker run --rm -it crosbymichael/redis-cli -h db1.redis.skydns.local`)
+  You can also connect to one of the redis nodes randomly (`docker run --rm -it crosbymichael/redis-cli -h redis.skydns.local`).
+  SRV records have also been created, so you can dynamically discover ports (`dig SRV redis.skydns.local`).
