@@ -30,3 +30,6 @@ Now that we've confirmed everything is running ok, here is an example of using d
 5. On `core-03`, connect to redis via `redis-cli` (`docker run --rm -it crosbymichael/redis-cli -h db1.redis.skydns.local`)
   You can also connect to one of the redis nodes randomly (`docker run --rm -it crosbymichael/redis-cli -h redis.skydns.local`).
   SRV records have also been created, so you can dynamically discover ports (`dig SRV redis.skydns.local`).
+
+### Thanks
+Special thanks to the guys at [CoreOs](https://coreos.com/), [Jeff Lindsay](https://github.com/progrium) for his work on registrator, and to the guys at [skynetservices](https://github.com/skynetservices) for building skydns.
